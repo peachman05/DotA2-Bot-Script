@@ -26,6 +26,7 @@ function AbilityUsageThink()
 	local npcBot = GetBot();
 
 	heroEnemy = npcBot:GetNearbyHeroes(1600,true,BOT_MODE_NONE);
+	
 	if(heroEnemy != nil)
 
 		input = {}
