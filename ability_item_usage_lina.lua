@@ -17,60 +17,64 @@ ESCAPE_ATTACK_STATE = 4;
 
 attack_state = NORMAL_ATTACK_STATE;
 
-botMachineObj = botMachine();
+-- botMachineObj = botMachine();
 
 function AbilityUsageThink()
 
 	
 
 	local npcBot = GetBot();
+	
 
 	heroEnemy = npcBot:GetNearbyHeroes(1600,true,BOT_MODE_NONE);
-	
-	if(heroEnemy != nil)
+	print(type(heroEnemy))
+	for k,v in pairs( heroEnemy ) do
+		print( string.format( "%s : %s\n", k, v ) )
+	end
+	-- if(heroEnemy != nil)
 
-		input = {}
-		input['hp_me'] = npcBot:GetHealth();
-		input['hp_enemy'] = npcEnemy:GetHealth();
-		input['mp_me'] = npcBot:GetMana();
-		input['mp_enemy'] = npcEnemy:GetMana();
-		input['distance'] = GetUnitToUnitDistance(npcBot,npcEnemy);
+	-- 	input = {}
+	-- 	input['hp_me'] = npcBot:GetHealth();
+	-- 	input['hp_enemy'] = npcEnemy:GetHealth();
+	-- 	input['mp_me'] = npcBot:GetMana();
+	-- 	input['mp_enemy'] = npcEnemy:GetMana();
+	-- 	input['distance'] = GetUnitToUnitDistance(npcBot,npcEnemy);
 		
-		abilityDS = npcBot:GetAbilityByName( "lina_dragon_slave" );
-		abilityLSA = npcBot:GetAbilityByName( "lina_light_strike_array" );	 +	
-	 +	abilityLB = npcBot:GetAbilityByName( "lina_laguna_blade" );
+	-- 	abilityDS = npcBot:GetAbilityByName( "lina_dragon_slave" );
+	-- 	abilityLSA = npcBot:GetAbilityByName( "lina_light_strike_array" );	 +	
+	--  +	abilityLB = npcBot:GetAbilityByName( "lina_laguna_blade" );
 
-		input['cooldown_s1'] = abilityDS:GetCooldownTimeRemaining()
-		input['cooldown_s2'] = abilityLSA:GetCooldownTimeRemaining()
-		input['cooldown_s3'] = abilityLB:GetCooldownTimeRemaining()
-		input['level_s1'] = abilityDS:GetLevel()
-		input['level_s2'] = abilityLSA:GetLevel()
-		input['level_s3'] = abilityLB:GetLevel()
+	-- 	input['cooldown_s1'] = abilityDS:GetCooldownTimeRemaining()
+	-- 	input['cooldown_s2'] = abilityLSA:GetCooldownTimeRemaining()
+	-- 	input['cooldown_s3'] = abilityLB:GetCooldownTimeRemaining()
+	-- 	input['level_s1'] = abilityDS:GetLevel()
+	-- 	input['level_s2'] = abilityLSA:GetLevel()
+	-- 	input['level_s3'] = abilityLB:GetLevel()
 
 
-		if(THINK_STATE == IDLE_THINK_STATE)
-		then
+	-- 	if(THINK_STATE == IDLE_THINK_STATE)
+	-- 	then
 
-			think_state = botMachineObj:getThinkState(input)
+	-- 		think_state = botMachineObj:getThinkState(input)
 
-		elseif(THINK_STATE == ATTACK_THINK_STATE)
+	-- 	elseif(THINK_STATE == ATTACK_THINK_STATE)
 
-			attack_state = botMachineObj:getAttackState(input)
+	-- 		attack_state = botMachineObj:getAttackState(input)
 
-			if(attack_state == ESCAPE_ATTACK_STATE)
-			then
-				THINK_STATE = ESCAPE_THINK_STATE;
-			else	
-				attackEnemy(attack_state,npc,enemy)
-			end
+	-- 		if(attack_state == ESCAPE_ATTACK_STATE)
+	-- 		then
+	-- 			THINK_STATE = ESCAPE_THINK_STATE;
+	-- 		else	
+	-- 			attackEnemy(attack_state,npc,enemy)
+	-- 		end
 			
 
-		elseif(THINK_STATE == ESCAPE_THINK_STATE)
+	-- 	elseif(THINK_STATE == ESCAPE_THINK_STATE)
 
-			--STATE = botMachineObj:getEscapeState(input)
-			escape();
+	-- 		--STATE = botMachineObj:getEscapeState(input)
+	-- 		escape();
 
-		end
+	-- 	end
 
 
 	
@@ -78,43 +82,44 @@ function AbilityUsageThink()
 end
 
 
-function attackEnemy(attack_state,npcBot,enemy)
+-- function attackEnemy(attack_state,npcBot,enemy)
 
-	if(attack_state == NORMAL_ATTACK_STATE)
-	then
-		npcBot:Action_AttackUnit( enemy, false )
+-- 	if(attack_state == NORMAL_ATTACK_STATE)
+-- 	then
+-- 		npcBot:Action_AttackUnit( enemy, false )
 
-	elseif(attack_state == SKILL1_ATTACK_STATE)
+-- 	elseif(attack_state == SKILL1_ATTACK_STATE)
 
-		abilityDS = npcBot:GetAbilityByName( "lina_dragon_slave" );
-		if ( abilityDS:IsFullyCastable() ) 
-		then
-			npcBot:Action_UseAbilityOnEntity(abilityDS,enemy);
-		end
+-- 		abilityDS = npcBot:GetAbilityByName( "lina_dragon_slave" );
+-- 		if ( abilityDS:IsFullyCastable() ) 
+-- 		then
+-- 			npcBot:Action_UseAbilityOnEntity(abilityDS,enemy);
+-- 		end
 
 		
-	 +	
-	elseif(attack_state == SKILL2_ATTACK_STATE)
+-- 	 +	
+-- 	elseif(attack_state == SKILL2_ATTACK_STATE)
 
-		abilityLSA = npcBot:GetAbilityByName( "lina_light_strike_array" );
-		if ( abilityLSA:IsFullyCastable() ) 
-		then
-			npcBot:Action_UseAbilityOnEntity(abilityLSA,enemy);
-		end
+-- 		abilityLSA = npcBot:GetAbilityByName( "lina_light_strike_array" );
+-- 		if ( abilityLSA:IsFullyCastable() ) 
+-- 		then
+-- 			npcBot:Action_UseAbilityOnEntity(abilityLSA,enemy);
+-- 		end
 
-	elseif(attack_state == SKILL3_ATTACK_STATE)
+-- 	elseif(attack_state == SKILL3_ATTACK_STATE)
 
-		abilityLB = npcBot:GetAbilityByName( "lina_laguna_blade" );
-		if ( abilityLB:IsFullyCastable() ) 
-		then
-			npcBot:Action_UseAbilityOnEntity(abilityLB,enemy);
-		end
+-- 		abilityLB = npcBot:GetAbilityByName( "lina_laguna_blade" );
+-- 		if ( abilityLB:IsFullyCastable() ) 
+-- 		then
+-- 			npcBot:Action_UseAbilityOnEntity(abilityLB,enemy);
+-- 		end
 
-	end
+-- 	end
 
-end
+-- end
 
-function escape()
+-- function escape()
 
 
-end
+-- end
+
