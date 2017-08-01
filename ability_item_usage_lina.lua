@@ -19,6 +19,9 @@ attack_state = NORMAL_ATTACK_STATE;
 
 -- botMachineObj = botMachine();
 
+
+scriptTest = require( "bots/Lua/scriptTest" );
+
 function AbilityUsageThink()
 
 	
@@ -26,32 +29,42 @@ function AbilityUsageThink()
 	local npcBot = GetBot();
 	
 
-	heroEnemy = npcBot:GetNearbyHeroes(1600,true,BOT_MODE_NONE);
-	print(type(heroEnemy))
-	for k,v in pairs( heroEnemy ) do
-		print( string.format( "%s : %s\n", k, v ) )
-	end
-	-- if(heroEnemy != nil)
+	scriptTest.testFunction()
 
-	-- 	input = {}
-	-- 	input['hp_me'] = npcBot:GetHealth();
-	-- 	input['hp_enemy'] = npcEnemy:GetHealth();
-	-- 	input['mp_me'] = npcBot:GetMana();
-	-- 	input['mp_enemy'] = npcEnemy:GetMana();
-	-- 	input['distance'] = GetUnitToUnitDistance(npcBot,npcEnemy);
+	local heroEnemy = npcBot:GetNearbyHeroes(1000,true,BOT_MODE_NONE);
+	-- print(heroEnemy)
+	for _,npcEnemy in pairs( heroEnemy )
+	do
+		print( npcEnemy:GetUnitName() )
+	
+	
+
+		input = {}
+		input['hp_me'] = npcBot:GetHealth();
+		input['hp_enemy'] = npcEnemy:GetHealth();
+		input['mp_me'] = npcBot:GetMana();
+		input['mp_enemy'] = npcEnemy:GetMana();
+		input['distance'] = GetUnitToUnitDistance(npcBot,npcEnemy);
 		
-	-- 	abilityDS = npcBot:GetAbilityByName( "lina_dragon_slave" );
-	-- 	abilityLSA = npcBot:GetAbilityByName( "lina_light_strike_array" );	 +	
-	--  +	abilityLB = npcBot:GetAbilityByName( "lina_laguna_blade" );
+		abilityDS = npcBot:GetAbilityByName( "lina_dragon_slave" );
+		abilityLSA = npcBot:GetAbilityByName( "lina_light_strike_array" );	
+		abilityLB = npcBot:GetAbilityByName( "lina_laguna_blade" );
 
-	-- 	input['cooldown_s1'] = abilityDS:GetCooldownTimeRemaining()
-	-- 	input['cooldown_s2'] = abilityLSA:GetCooldownTimeRemaining()
-	-- 	input['cooldown_s3'] = abilityLB:GetCooldownTimeRemaining()
-	-- 	input['level_s1'] = abilityDS:GetLevel()
-	-- 	input['level_s2'] = abilityLSA:GetLevel()
-	-- 	input['level_s3'] = abilityLB:GetLevel()
+		input['cooldown_s1'] = abilityDS:GetCooldownTimeRemaining()
+		input['cooldown_s2'] = abilityLSA:GetCooldownTimeRemaining()
+		input['cooldown_s3'] = abilityLB:GetCooldownTimeRemaining()
+		input['level_s1'] = abilityDS:GetLevel()
+		input['level_s2'] = abilityLSA:GetLevel()
+		input['level_s3'] = abilityLB:GetLevel()
 
 
+		for key,value in pairs( input )
+		do
+			print( key , value )
+
+		end
+
+		
 	-- 	if(THINK_STATE == IDLE_THINK_STATE)
 	-- 	then
 
@@ -75,6 +88,7 @@ function AbilityUsageThink()
 	-- 		escape();
 
 	-- 	end
+	end
 
 
 	

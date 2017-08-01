@@ -9,7 +9,7 @@ function Think()
 	then
 		print( "selecting radiant" );
 		SelectHero( 0, "npc_dota_hero_lina" );
-		SelectHero( 1, "npc_dota_hero_lina" );
+		SelectHero( 1, "npc_dota_hero_bane" );
 		SelectHero( 2, "npc_dota_hero_bane" );
 		SelectHero( 3, "npc_dota_hero_bloodseeker" );
 		SelectHero( 4, "npc_dota_hero_crystal_maiden" );
