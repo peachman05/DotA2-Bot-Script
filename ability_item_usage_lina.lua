@@ -17,7 +17,7 @@ ESCAPE_ATTACK_STATE = 4;
 
 attack_state = NORMAL_ATTACK_STATE;
 
--- botMachineObj = botMachine();
+botMachineObj = require( "bots/Lua/botMachine" );
 
 
 scriptTest = require( "bots/Lua/scriptTest" );
