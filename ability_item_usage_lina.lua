@@ -1,11 +1,11 @@
 
 ----------------------------------------------------------------------------------------------------
 
-IDLE_THINK_STATE = 0;
-ATTACK_THINK_STATE = 1;
-ESCAPE_THINK_STATE = 2;
+IDLE_THINK_STATE = 1;
+ATTACK_THINK_STATE = 2;
+ESCAPE_THINK_STATE = 3;
 
-think_state = IDLE_THINK_STATE;
+think_state = 1;
 
 -------------- attack
 
@@ -16,6 +16,8 @@ SKILL3_ATTACK_STATE = 3;
 ESCAPE_ATTACK_STATE = 4;
 
 attack_state = NORMAL_ATTACK_STATE;
+
+input = {}
 
 botMachineObj = require( "bots/Lua/botMachine" );
 
@@ -29,17 +31,17 @@ function AbilityUsageThink()
 	local npcBot = GetBot();
 	
 
-	scriptTest.testFunction()
 
-	local heroEnemy = npcBot:GetNearbyHeroes(1000,true,BOT_MODE_NONE);
+	local heroEnemy = npcBot:GetNearbyHeroes(600,true,BOT_MODE_NONE);
 	-- print(heroEnemy)
 	for _,npcEnemy in pairs( heroEnemy )
 	do
+
 		print( npcEnemy:GetUnitName() )
 	
 	
 
-		input = {}
+		
 		input['hp_me'] = npcBot:GetHealth();
 		input['hp_enemy'] = npcEnemy:GetHealth();
 		input['mp_me'] = npcBot:GetMana();
@@ -57,41 +59,88 @@ function AbilityUsageThink()
 		input['level_s2'] = abilityLSA:GetLevel()
 		input['level_s3'] = abilityLB:GetLevel()
 
+		_G.input = input
 
-		for key,value in pairs( input )
-		do
-			print( key , value )
 
-		end
+		-- for key,value in pairs( input )
+		-- do
+		-- 	print( key , value )
+
+		-- end
 
 		
-	-- 	if(THINK_STATE == IDLE_THINK_STATE)
-	-- 	then
+		if(think_state == IDLE_THINK_STATE)
+		then
 
-	-- 		think_state = botMachineObj:getThinkState(input)
+			--think_state = botMachineObj:getThinkState()
+			--test(input);
+			print("go think_state");
 
-	-- 	elseif(THINK_STATE == ATTACK_THINK_STATE)
+			request =	CreateHTTPRequest(  ""  )
+	
+			print("testddd");
 
-	-- 		attack_state = botMachineObj:getAttackState(input)
+			-- request:SetHTTPRequestGetOrPostParameter("hp_me", tostring(input['hp_me'])  );
+			-- request:SetHTTPRequestGetOrPostParameter("hp_enemy",tostring(input['hp_enemy'])  );
+			-- request:SetHTTPRequestGetOrPostParameter("mp_me", tostring(input['mp_me']) );
+			-- request:SetHTTPRequestGetOrPostParameter("mp_enemy",tostring(input['mp_enemy']) );
+			-- request:SetHTTPRequestGetOrPostParameter("distance",tostring(input['distance']) );
+			-- request:SetHTTPRequestGetOrPostParameter("level_s1",tostring(input['level_s1']) );
+			-- request:SetHTTPRequestGetOrPostParameter("level_s2",tostring(input['level_s2']) );
+			-- request:SetHTTPRequestGetOrPostParameter("level_s3",tostring(input['level_s3']) );
+			-- request:SetHTTPRequestGetOrPostParameter("cd_s1",tostring(input['cd_s1']) );
+			-- request:SetHTTPRequestGetOrPostParameter("cd_s2",tostring(input['cd_s2']) );
+			-- request:SetHTTPRequestGetOrPostParameter("cd_s3",tostring(input['cd_s3']) );
+			-- request:SetHTTPRequestGetOrPostParameter("mode",tostring(mode));
 
-	-- 		if(attack_state == ESCAPE_ATTACK_STATE)
-	-- 		then
-	-- 			THINK_STATE = ESCAPE_THINK_STATE;
-	-- 		else	
-	-- 			attackEnemy(attack_state,npc,enemy)
-	-- 		end
+			print("getThinkState")
+			request:Send( function( result )
+		 				print( "GET response: \n")
+		 				--print(result)
+		 				for k,v in pairs( result ) do
+		 					print( string.format( "%s : %s\n", k, v ) )
+		 				end
+		 
+		 				for k2, v2 in pairs( v ) do
+		 					print(k, v2)
+		 					print(type(v2))
+		 				end
+		 	end )
+
+		elseif(think_state == ATTACK_THINK_STATE)
+		then
+			attack_state = botMachineObj:getAttackState(input)
+
+			if(attack_state == ESCAPE_ATTACK_STATE)
+			then
+				think_state = ESCAPE_THINK_STATE;
+			else	
+				attackEnemy(attack_state,npc,enemy)
+			end
 			
 
-	-- 	elseif(THINK_STATE == ESCAPE_THINK_STATE)
+		elseif(think_state == ESCAPE_THINK_STATE)
+		then
+			--STATE = botMachineObj:getEscapeState(input)
+			escape();
 
-	-- 		--STATE = botMachineObj:getEscapeState(input)
-	-- 		escape();
-
-	-- 	end
+		end
+		print("State:"..tostring(think_state) )
 	end
 
 
 	
+
+end
+
+function test(input)
+
+	print(type(input))
+	for key,value in pairs( input )
+		do
+			print( key , value )
+
+		end
 
 end
 
