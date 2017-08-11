@@ -19,6 +19,17 @@ ESCAPE_ATTACK_STATE = 104;
 
 attack_state = NORMAL_ATTACK_STATE;
 
+
+-------------- get damage
+ENEMY_NOT_USE_ABILITY = 201;
+ENEMY_USE_ABILITY = 202;
+
+enemy_attack = ENEMY_NOT_USE_ABILITY;
+
+-----------------------
+
+hAbilityAttack = nil;
+
 input = {}
 npcBot = GetBot();
 
@@ -31,13 +42,44 @@ function AbilityUsageThink()
 
 	
 	
-	local heroEnemy = npcBot:GetNearbyHeroes(600,true,BOT_MODE_NONE);
+
+	local heroEnemy = npcBot:GetNearbyHeroes(1000,true,BOT_MODE_NONE);
 	-- print(heroEnemy)
 	for _,npcEnemy in pairs( heroEnemy )
 	do
 
-		print( npcEnemy:GetUnitName() )
-		
+		--print( npcEnemy:GetUnitName() )
+		if( enemy_attack ==  ENEMY_NOT_USE_ABILITY )
+		then
+
+			if( npcEnemy:GetUnitName() == "npc_dota_hero_lina" and npcEnemy:IsCastingAbility() == true )
+			then
+
+				print("Use Skill");
+				hAbilityAttack = npcEnemy:GetCurrentActiveAbility();
+				enemy_attack =  ENEMY_USE_ABILITY;
+
+			end
+			
+		end
+
+		if(  npcEnemy:GetUnitName() == "npc_dota_hero_lina" and npcBot:WasRecentlyDamagedByHero( npcEnemy,1 ) )
+		then
+
+			if( enemy_attack == ENEMY_USE_ABILITY)
+			then
+
+				print( hAbilityAttack:GetName() );
+
+			else
+				print("Normal Damage");
+			end 
+			enemy_attack =  ENEMY_NOT_USE_ABILITY;
+
+		end
+
+
+
 		input['hp_me'] = npcBot:GetHealth();
 		input['hp_enemy'] = npcEnemy:GetHealth();
 		input['mp_me'] = npcBot:GetMana();
@@ -74,7 +116,7 @@ function AbilityUsageThink()
 				if(think_state == IDLE_THINK_STATE)
 				then
 
-					botMachineObj:getThinkState()
+					--botMachineObj:getThinkState()
 				
 
 				elseif(think_state == ATTACK_THINK_STATE)
@@ -95,7 +137,7 @@ function AbilityUsageThink()
 					escape();
 
 				end
-				print("State:"..tostring(think_state) )
+				--print("State:"..tostring(think_state) )
 		end
 
 	end
@@ -141,6 +183,13 @@ function test(input)
 
 end
 
+
+function updateTrainbotMachie(hEnemy)
+
+	hAbility = hEnemy:GetCurrentActiveAbility();
+	
+
+end 
 
 -- function attackEnemy(attack_state,npcBot,enemy)
 

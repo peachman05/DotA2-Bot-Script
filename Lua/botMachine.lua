@@ -51,6 +51,8 @@ function getThinkState()
 
 	print("starttt")
 
+
+
  	request = createRequest( input , IDLE_THINK_STATE )
 
  	
