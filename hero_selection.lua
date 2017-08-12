@@ -18,9 +18,9 @@ function Think()
 		print( "selecting dire" );
 		SelectHero( 5, "npc_dota_hero_lina" );
 		SelectHero( 6, "npc_dota_hero_earthshaker" );
-		SelectHero( 7, "npc_dota_hero_juggernaut" );
-		SelectHero( 8, "npc_dota_hero_mirana" );
-		SelectHero( 9, "npc_dota_hero_nevermore" );
+		SelectHero( 7, "npc_dota_hero_earthshaker" );
+		SelectHero( 8, "npc_dota_hero_earthshaker" );
+		SelectHero( 9, "npc_dota_hero_earthshaker" );
 	end
 
 end

@@ -6,6 +6,7 @@ import psycopg2
 import logging
 from logging.handlers import RotatingFileHandler
 import sys
+import csv
 
 app = Flask(__name__)
 
@@ -13,6 +14,8 @@ app = Flask(__name__)
 def login():
 
    inputData = {}
+
+   method = request.form['method']
 
    inputData['hp_me'] = request.form['hp_me']
    inputData['hp_enemy']  = request.form['hp_enemy']
@@ -26,7 +29,28 @@ def login():
    inputData['cd_s2'] = request.form['cd_s2']
    inputData['cd_s3'] = request.form['cd_s3']
 
+   if(method == "predict"):
+
+       
+   else:
+      inputData['output'] = request.form['output']
+
+
    print(inputData)
+
+   f = open("data.csv", 'a')
+   try:
+      writer = csv.writer(f)
+      #writer.writerow( ('Title 1', 'Title 2', 'Title 3') )
+      writer.writerow( ( inputData['hp_me'] , 
+                         inputData['hp_enemy'],
+                         inputData['mp_me']
+        ) )
+   finally:
+      f.close()
+
+   print( open("data.csv", 'rt').read() )
+
 
    # if request.method == 'POST':
    #    user = request.form['nm']
