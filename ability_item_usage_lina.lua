@@ -38,6 +38,10 @@ cooldown_lina[1] = {8,8,8}
 cooldown_lina[2] = {7,7,7}
 cooldown_lina[3] = {70,60,50}
 
+hp_bot_old = 0;
+
+skillName = {"lina_dragon_slave","lina_light_strike_array","lina_laguna_blade"}
+coolDownArray = {"cd_s1","cd_s2","cd_s3"}
 
 input = {}
 inputTrain = {}
@@ -51,8 +55,6 @@ scriptTest = require( "bots/Lua/scriptTest" );
 
 function AbilityUsageThink()
 
-	
-	
 
 	local heroEnemy = npcBot:GetNearbyHeroes(1000,true,BOT_MODE_NONE);
 	-- print(heroEnemy)
@@ -61,79 +63,111 @@ function AbilityUsageThink()
 
 		--print( npcEnemy:GetUnitName() )
 		
-		if( npcEnemy:GetUnitName() == "npc_dota_hero_lina" and npcEnemy:IsCastingAbility() == true )
-		then
+		----------------------  Train Data
+		if(npcEnemy:GetUnitName() == "npc_dota_hero_lina" )then
 
-			print("Use Skill");
-			hAbilityAttack = npcEnemy:GetCurrentActiveAbility();
-			time_attack = GameTime();
-			enemy_attack =  ENEMY_USE_ABILITY;
-
-			if( hAbilityAttack:GetName() == "lina_dragon_slave" )then
-				
-				skill_cooldown[1] = timeSecNow;	
-
-			elseif( hAbilityAttack:GetName() == "lina_light_strike_array" )then
-				
-				skill_cooldown[2] = timeSecNow;
-
-			elseif( hAbilityAttack:GetName() == "lina_laguna_blade" )then
-				
-				skill_cooldown[3] = timeSecNow;
-
-			end
-
-		end
-			
-
-		
-		time = npcBot:TimeSinceDamagedByHero(npcEnemy)
-		timeSecNow = GameTime();
-		--if(  npcEnemy:GetUnitName() == "npc_dota_hero_lina" and npcBot:WasRecentlyDamagedByHero( npcEnemy, 0.1 ) )
-		if(  npcEnemy:GetUnitName() == "npc_dota_hero_lina" and time < 0.05 )
-		then
-			print("Time: "..tostring(time) );
-			print("Time Game"..timeSecNow );
-			print("time_attack"..time_attack);
-
-			if( enemy_attack == ENEMY_USE_ABILITY and timeSecNow - time_attack < 1 )
+			if(  npcEnemy:IsCastingAbility() == true )
 			then
 
+				print("Use Skill");
+				hAbilityAttack = npcEnemy:GetCurrentActiveAbility();
+				time_attack = GameTime();
+				enemy_attack =  ENEMY_USE_ABILITY;
+
+				if( hAbilityAttack:GetName() == "lina_dragon_slave" )then
+					
+					skill_cooldown[1] = timeSecNow;	
+
+				elseif( hAbilityAttack:GetName() == "lina_light_strike_array" )then
+					
+					skill_cooldown[2] = timeSecNow;
+
+				elseif( hAbilityAttack:GetName() == "lina_laguna_blade" )then
+					
+					skill_cooldown[3] = timeSecNow;
+
+				end
+
+			end -- end check cast spell
 				
+
+			
+			time = npcBot:TimeSinceDamagedByHero(npcEnemy)
+			timeSecNow = GameTime();
+
+			if(  npcEnemy:GetUnitName() == "npc_dota_hero_lina" and time < 0.05 )
+			then
+				
+
 				inputTrain['hp_me'] = npcEnemy:GetHealth();
-				inputTrain['hp_enemy'] = npcBot:GetHealth();
-				inputTrain['mp_me'] = npcEnemy:GetMana();
+				inputTrain['hp_enemy'] = hp_bot_old;
+				--inputTrain['mp_me'] = mp_enemy_old;
 				inputTrain['mp_enemy'] = npcBot:GetMana();
 				inputTrain['distance'] = GetUnitToUnitDistance(npcBot,npcEnemy);
 				
-				abilityDS_Train = npcEnemy:GetAbilityByName( "lina_dragon_slave" );
-				abilityLSA_Train = npcEnemy:GetAbilityByName( "lina_light_strike_array" );	
-				abilityLB_Train = npcEnemy:GetAbilityByName( "lina_laguna_blade" );
-
-				inputTrain['level_s1'] = abilityDS_Train:GetLevel()
-				inputTrain['level_s2'] = abilityLSA_Train:GetLevel()
-				inputTrain['level_s3'] = abilityLB_Train:GetLevel()
 
 
-				inputTrain['cooldown_s1'] = calCoolDown(1 , abilityDS_Train:GetLevel() ,timeSecNow , abilityDS_Train:GetName());
-				inputTrain['cooldown_s2'] = calCoolDown(2 , abilityLSA_Train:GetLevel() ,timeSecNow, abilityLSA_Train:GetName());
-				inputTrain['cooldown_s3'] = calCoolDown(3 , abilityLB_Train:GetLevel() ,timeSecNow, abilityLB_Train:GetName());
+				local abilityArray = {}
 
-			
-				print( hAbilityAttack:GetName() );
-				print("Cooldown1 Remain:"..tostring(inputTrain['cooldown_s1']));
-				print("Cooldown2 Remain:"..tostring(inputTrain['cooldown_s2']));
-				print("Cooldown3 Remain:"..tostring(inputTrain['cooldown_s3']));
+				abilityArray[1] = npcEnemy:GetAbilityByName( "lina_dragon_slave" );
+				abilityArray[2] = npcEnemy:GetAbilityByName( "lina_light_strike_array" );	
+				abilityArray[3] = npcEnemy:GetAbilityByName( "lina_laguna_blade" );
+
+				inputTrain['level_s1'] = abilityArray[1]:GetLevel();
+				inputTrain['level_s2'] = abilityArray[2]:GetLevel();
+				inputTrain['level_s3'] = abilityArray[3]:GetLevel();
+
+
+				if( enemy_attack == ENEMY_USE_ABILITY and timeSecNow - time_attack < 1  )then -- use skill
+
+					print( hAbilityAttack:GetName() );
+
+					for i=1,3 do  
+						if( hAbilityAttack:GetName() ~= skillName[i] )then -- This ability don't use
+							inputTrain[coolDownArray[i]] = calCoolDown(i , abilityArray[i]:GetLevel() ,timeSecNow );
+						else
+							inputTrain[coolDownArray[i]] = 0 ;
+							inputTrain['output'] = NORMAL_ATTACK_STATE + i ;
+							inputTrain['mp_me'] = npcEnemy:GetMana() + abilityArray[i]:GetManaCost();
+						end
+
+						--print("Cooldown"..tostring(i).." Remain:"..tostring(inputTrain[coolDownArray[i]]));
+
+					end
+				
+					
+				else
+					print("Normal Damage");
+
+					inputTrain['cd_s1'] = calCoolDown(1 , abilityArray[1]:GetLevel() ,timeSecNow );	
+					inputTrain['cd_s2'] = calCoolDown(2 , abilityArray[1]:GetLevel() ,timeSecNow );
+					inputTrain['cd_s3'] = calCoolDown(3 , abilityArray[1]:GetLevel() ,timeSecNow );
+					inputTrain['output'] = NORMAL_ATTACK_STATE
+
+					inputTrain['mp_me'] = npcEnemy:GetMana();
+
+					damageTaken = npcBot:GetActualIncomingDamage(npcEnemy:GetAttackDamage(),DAMAGE_TYPE_PHYSICAL) ;
+					-- inputTrain['hp_enemy'] = npcBot:GetHealth() + damageTaken;
+					-- print( "Damage Taken"..tostring(npcBot:GetActualIncomingDamage(npcEnemy:GetAttackDamage(),DAMAGE_TYPE_PHYSICAL) ) );
+
+				end 
+
+				_G.inputTrain = inputTrain;
+
+				botMachineObj:trainAttackState();
+				enemy_attack =  ENEMY_NOT_USE_ABILITY;
 
 			else
-				print("Normal Damage");
-			end 
-			enemy_attack =  ENEMY_NOT_USE_ABILITY;
 
+				hp_bot_old =  npcBot:GetHealth();
+
+
+			end  -- end check damage
 
 		end
 
 
+		---------------------- predict
 
 		input['hp_me'] = npcBot:GetHealth();
 		input['hp_enemy'] = npcEnemy:GetHealth();
@@ -145,16 +179,14 @@ function AbilityUsageThink()
 		abilityLSA = npcBot:GetAbilityByName( "lina_light_strike_array" );	
 		abilityLB = npcBot:GetAbilityByName( "lina_laguna_blade" );
 
-		input['cooldown_s1'] = abilityDS:GetCooldownTimeRemaining()
-		input['cooldown_s2'] = abilityLSA:GetCooldownTimeRemaining()
-		input['cooldown_s3'] = abilityLB:GetCooldownTimeRemaining()
+		input['cd_s1'] = abilityDS:GetCooldownTimeRemaining()
+		input['cd_s2'] = abilityLSA:GetCooldownTimeRemaining()
+		input['cd_s3'] = abilityLB:GetCooldownTimeRemaining()
 		input['level_s1'] = abilityDS:GetLevel()
 		input['level_s2'] = abilityLSA:GetLevel()
 		input['level_s3'] = abilityLB:GetLevel()
 
-		-- print( tostring(  npcEnemy:GetAbilityByName("lina_dragon_slave"):GetLevel() )  )
-		-- print( tostring(  npcEnemy:GetAbilityByName("lina_light_strike_array"):GetLevel() )  )
-		-- print( tostring(  npcEnemy:GetAbilityByName("lina_laguna_blade"):GetLevel() )  )
+
 
 		_G.input = input
 
@@ -210,7 +242,7 @@ function AbilityLevelUpThink()
 
 	  		abilityDS = npcBot:GetAbilityByName( "lina_dragon_slave" );
 	  		abilityLSA = npcBot:GetAbilityByName( "lina_light_strike_array" );
-	  		print("Get "..tostring(abilityLSA:GetLevel()).." Max"..tostring(abilityLSA:GetMaxLevel()) .. "Can"..tostring(abilityLSA:CanAbilityBeUpgraded()))
+	  	--	print("Get "..tostring(abilityLSA:GetLevel()).." Max"..tostring(abilityLSA:GetMaxLevel()) .. "Can"..tostring(abilityLSA:CanAbilityBeUpgraded()))
 	  		if( abilityLSA:CanAbilityBeUpgraded() and ( abilityLSA:GetLevel() < abilityLSA:GetMaxLevel() ) )
 	  		then 
                 
@@ -239,17 +271,13 @@ function test(input)
 end
 
 
-function calCoolDown(numberSkill , levelSkill , timeSecNow , nameAbility)
+function calCoolDown(numberSkill , levelSkill , timeSecNow )
 
-	if( levelSkill > 0 and hAbilityAttack:GetName() ~= nameAbility )then
+	if( levelSkill > 0 )then
 		timePassSec = timeSecNow - skill_cooldown[numberSkill] ;
-		print("levelSkill "..levelSkill)
-		print("timeSecNow"..tostring(timeSecNow))
-		print("skill_cooldown[numberSkill]"..tostring(skill_cooldown[numberSkill]))
-		print("timePassSec"..tostring(timePassSec))
+
 		cooldownRemain = cooldown_lina[numberSkill][levelSkill] - timePassSec  ;
 
-		print("cooldown skill:"..numberSkill.." Is "..cooldown_lina[numberSkill][levelSkill]); 
 
 		if( cooldownRemain < 0 )then
 			cooldownRemain = 0;

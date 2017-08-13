@@ -15,7 +15,7 @@ function checkIfZero(number)
 
 end 
 
-function createRequest(input,mode)
+function createRequest(input,mode,method)
 	request =	CreateHTTPRequest(  serverHTTPLoc )
 	
 	print("testddd");
@@ -27,10 +27,16 @@ function createRequest(input,mode)
 	request:SetHTTPRequestGetOrPostParameter("level_s1",tostring( checkIfZero(input['level_s1']) ) );
 	request:SetHTTPRequestGetOrPostParameter("level_s2",tostring( checkIfZero(input['level_s2']) ) );
 	request:SetHTTPRequestGetOrPostParameter("level_s3",tostring( checkIfZero(input['level_s3']) ) );
-	request:SetHTTPRequestGetOrPostParameter("cd_s1",tostring( checkIfZero(input['cd_s1']) ) );
-	request:SetHTTPRequestGetOrPostParameter("cd_s2",tostring( checkIfZero(input['cd_s2']) ) );
-	request:SetHTTPRequestGetOrPostParameter("cd_s3",tostring( checkIfZero(input['cd_s3']) ) );
-	request:SetHTTPRequestGetOrPostParameter("mode",tostring(mode));
+	request:SetHTTPRequestGetOrPostParameter("cd_s1",tostring( checkIfZero(  math.ceil(input['cd_s1']) ) ) );
+	request:SetHTTPRequestGetOrPostParameter("cd_s2",tostring( checkIfZero(  math.ceil(input['cd_s2']) ) ) );
+	request:SetHTTPRequestGetOrPostParameter("cd_s3",tostring( checkIfZero(  math.ceil(input['cd_s3']) ) ) );
+	request:SetHTTPRequestGetOrPostParameter("method",method);
+
+	if(method == "Train")then
+		request:SetHTTPRequestGetOrPostParameter("output", tostring( checkIfZero(input['ouput']) ) );
+	else
+		request:SetHTTPRequestGetOrPostParameter("mode",tostring(mode));
+	end
 
 
 
@@ -49,11 +55,7 @@ function getThinkState()
 
 	end
 
-	print("starttt")
-
-
-
- 	request = createRequest( input , IDLE_THINK_STATE )
+ 	request = createRequest( input , IDLE_THINK_STATE ,"predict" )
 
  	
 	print("getThinkState")
@@ -101,8 +103,29 @@ function getAttackState(input)
 end
 
 
+function trainAttackState()
+	inputTrain = _G.inputTrain
+
+	for key,value in pairs( inputTrain )
+		do
+			print(key , value);
+
+	end
+
+	request = createRequest( input , IDLE_THINK_STATE , "Train" )
+
+	request:Send( function( result )
+ 				print( "GET response: \n")
+ 				returnNum = tonumber(result['Body'])
+ 				print(returnNum );
+ 			
+ 	end )
+
+end
+
 
 M.getThinkState = getThinkState
+M.trainAttackState = trainAttackState
  
 return M
 
