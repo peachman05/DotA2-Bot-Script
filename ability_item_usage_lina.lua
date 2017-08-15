@@ -34,8 +34,8 @@ hAbilityAttack = nil;
 
 skill_cooldown = { 0 , 0 , 0 , 0}
 cooldown_lina = {}
-cooldown_lina[1] = {8,8,8}
-cooldown_lina[2] = {7,7,7}
+cooldown_lina[1] = {8,8,8,8}
+cooldown_lina[2] = {7,7,7,7}
 cooldown_lina[3] = {70,60,50}
 
 hp_bot_old = 0;
@@ -56,7 +56,7 @@ scriptTest = require( "bots/Lua/scriptTest" );
 function AbilityUsageThink()
 
 
-	local heroEnemy = npcBot:GetNearbyHeroes(1000,true,BOT_MODE_NONE);
+	local heroEnemy = npcBot:GetNearbyHeroes(1600,true,BOT_MODE_NONE);
 	-- print(heroEnemy)
 	for _,npcEnemy in pairs( heroEnemy )
 	do
@@ -140,8 +140,8 @@ function AbilityUsageThink()
 					print("Normal Damage");
 
 					inputTrain['cd_s1'] = calCoolDown(1 , abilityArray[1]:GetLevel() ,timeSecNow );	
-					inputTrain['cd_s2'] = calCoolDown(2 , abilityArray[1]:GetLevel() ,timeSecNow );
-					inputTrain['cd_s3'] = calCoolDown(3 , abilityArray[1]:GetLevel() ,timeSecNow );
+					inputTrain['cd_s2'] = calCoolDown(2 , abilityArray[2]:GetLevel() ,timeSecNow );
+					inputTrain['cd_s3'] = calCoolDown(3 , abilityArray[3]:GetLevel() ,timeSecNow );
 					inputTrain['output'] = NORMAL_ATTACK_STATE
 
 					inputTrain['mp_me'] = npcEnemy:GetMana();
@@ -275,7 +275,7 @@ function calCoolDown(numberSkill , levelSkill , timeSecNow )
 
 	if( levelSkill > 0 )then
 		timePassSec = timeSecNow - skill_cooldown[numberSkill] ;
-
+		print("numberSkill "..tostring(numberSkill).." levelskill"..tostring(levelSkill))
 		cooldownRemain = cooldown_lina[numberSkill][levelSkill] - timePassSec  ;
 
 

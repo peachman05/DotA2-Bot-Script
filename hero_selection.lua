@@ -1,13 +1,13 @@
 
 BotRadiantList = {"npc_dota_hero_lina",
-				  "npc_dota_hero_disruptor",
-				  "npc_dota_hero_antimage",
-				  "npc_dota_hero_bristleback",
-				  "npc_dota_hero_brewmaster"};
+				  "npc_dota_hero_lina",
+				  "npc_dota_hero_lina",
+				  "npc_dota_hero_lina",
+				  "npc_dota_hero_lina"};
 
 BotDireList = {"npc_dota_hero_axe",
 				  "npc_dota_hero_bane",
-				  "npc_dota_hero_bloodseeker",
+				  "npc_dota_hero_lina",
 				  "npc_dota_hero_crystal_maiden",
 				  "npc_dota_hero_batrider"};
 ----------------------------------------------------------------------------------------------------
@@ -38,6 +38,53 @@ function Think()
 		end
 
 	end
+
+end
+
+function UpdateLaneAssignments()
+
+	
+
+	if ( GetTeam() == TEAM_RADIANT ) then
+
+		table = {}
+		IDs=GetTeamPlayers(TEAM_RADIANT);
+		for i,id in pairs(IDs) do
+			if IsPlayerBot(id) then
+				if( GetSelectedHeroName(id) == "npc_dota_hero_lina" )then
+					table[i] = LANE_MID;
+					print(tostring(id).." mid");
+				else
+					table[i] = LANE_TOP;
+					print(tostring(id).." none");
+				end
+
+			end
+		end
+
+		return table;
+
+	elseif ( GetTeam() == TEAM_DIRE ) then
+		
+		table = {}
+		IDs=GetTeamPlayers(TEAM_DIRE);
+		for i,id in pairs(IDs) do
+			if IsPlayerBot(id) then
+				if( GetSelectedHeroName(id) == "npc_dota_hero_lina" )then
+					table[i] = LANE_MID;
+					print(tostring(id).." mid");
+				else
+					table[i] = LANE_TOP;
+					print(tostring(id).." none");
+				end
+
+			end
+		end
+
+		return table;
+
+	end
+
 
 end
 
