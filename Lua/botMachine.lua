@@ -33,7 +33,8 @@ function createRequest(input,mode,method)
 	request:SetHTTPRequestGetOrPostParameter("method",method);
 
 	if(method == "Train")then
-		request:SetHTTPRequestGetOrPostParameter("output", tostring( checkIfZero(input['ouput']) ) );
+		request:SetHTTPRequestGetOrPostParameter("output", tostring( checkIfZero(input['output']) ) );
+		print("Trainnn "..tostring( checkIfZero(input['output']) ))
 	else
 		request:SetHTTPRequestGetOrPostParameter("mode",tostring(mode));
 	end
@@ -112,7 +113,7 @@ function trainAttackState()
 
 	end
 
-	request = createRequest( input , IDLE_THINK_STATE , "Train" )
+	request = createRequest( inputTrain , IDLE_THINK_STATE , "Train" )
 
 	request:Send( function( result )
  				print( "GET response: \n")

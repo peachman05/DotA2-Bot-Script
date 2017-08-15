@@ -1,5 +1,15 @@
 
+BotRadiantList = {"npc_dota_hero_lina",
+				  "npc_dota_hero_disruptor",
+				  "npc_dota_hero_antimage",
+				  "npc_dota_hero_bristleback",
+				  "npc_dota_hero_brewmaster"};
 
+BotDireList = {"npc_dota_hero_axe",
+				  "npc_dota_hero_bane",
+				  "npc_dota_hero_bloodseeker",
+				  "npc_dota_hero_crystal_maiden",
+				  "npc_dota_hero_batrider"};
 ----------------------------------------------------------------------------------------------------
 
 function Think()
@@ -7,20 +17,26 @@ function Think()
 
 	if ( GetTeam() == TEAM_RADIANT )
 	then
+
 		print( "selecting radiant" );
-		SelectHero( 0, "npc_dota_hero_lina" );
-		SelectHero( 1, "npc_dota_hero_bane" );
-		SelectHero( 2, "npc_dota_hero_bane" );
-		SelectHero( 3, "npc_dota_hero_bloodseeker" );
-		SelectHero( 4, "npc_dota_hero_crystal_maiden" );
+		local IDs=GetTeamPlayers(GetTeam());
+		for i,id in pairs(IDs) do
+			if IsPlayerBot(id) then
+				SelectHero(id,BotRadiantList[i]);
+			end
+		end
+
 	elseif ( GetTeam() == TEAM_DIRE )
 	then
+
 		print( "selecting dire" );
-		SelectHero( 5, "npc_dota_hero_lina" );
-		SelectHero( 6, "npc_dota_hero_earthshaker" );
-		SelectHero( 7, "npc_dota_hero_earthshaker" );
-		SelectHero( 8, "npc_dota_hero_earthshaker" );
-		SelectHero( 9, "npc_dota_hero_earthshaker" );
+		local IDs=GetTeamPlayers(GetTeam());
+		for i,id in pairs(IDs) do
+			if IsPlayerBot(id) then
+				SelectHero(id,BotDireList[i]);
+			end
+		end
+
 	end
 
 end

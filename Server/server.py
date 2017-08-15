@@ -35,7 +35,7 @@ def login():
 
    if(method == "predict"):
 
-       
+       print(predict);
    else:
 
       inputData['output'] = request.form['output']
