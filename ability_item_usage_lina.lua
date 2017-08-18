@@ -47,6 +47,7 @@ input = {}
 inputTrain = {}
 npcBot = GetBot();
 
+npcLina = 0;
 
 botMachineObj = require( "bots/Lua/botMachine" );
 
@@ -55,7 +56,7 @@ scriptTest = require( "bots/Lua/scriptTest" );
 
 function AbilityUsageThink()
 
-
+	
 	local heroEnemy = npcBot:GetNearbyHeroes(1600,true,BOT_MODE_NONE);
 	-- print(heroEnemy)
 	for _,npcEnemy in pairs( heroEnemy )
@@ -65,6 +66,8 @@ function AbilityUsageThink()
 		
 		----------------------  Train Data
 		if(npcEnemy:GetUnitName() == "npc_dota_hero_lina" )then
+
+			npcLina = npcEnemy;
 
 			if(  npcEnemy:IsCastingAbility() == true )
 			then
@@ -258,6 +261,13 @@ function AbilityLevelUpThink()
 
 end
 
+
+function BuybackUsageThink()
+
+	if( npcBot:IsAlive() == false)then
+		print("Bot it dead"..tostring(npcBot:TimeSinceDamagedByAnyHero()) );
+	end
+end
 
 function test(input)
 
