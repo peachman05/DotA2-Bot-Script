@@ -18,7 +18,7 @@ function Think()
 	if ( GetTeam() == TEAM_RADIANT )
 	then
 
-		print( "selecting radiant" );
+		-- print( "selecting radiant" );
 		local IDs=GetTeamPlayers(GetTeam());
 		for i,id in pairs(IDs) do
 			if IsPlayerBot(id) then
@@ -29,7 +29,7 @@ function Think()
 	elseif ( GetTeam() == TEAM_DIRE )
 	then
 
-		print( "selecting dire" );
+		-- print( "selecting dire" );
 		local IDs=GetTeamPlayers(GetTeam());
 		for i,id in pairs(IDs) do
 			if IsPlayerBot(id) then
