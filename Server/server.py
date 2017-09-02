@@ -1,57 +1,23 @@
+def run_episode(env, parameters):  
+    observation = env.reset()
+    totalreward = 0
+    for _ in xrange(200):
+        action = 0 if np.matmul(parameters,observation) < 0 else 1
+        observation, reward, done, info = env.step(action)
+        totalreward += reward
+        if done:
+            break
+    return totalreward
 
 
-from flask import Flask, redirect, url_for, request, jsonify
-############  
-import psycopg2
-import logging
-from logging.handlers import RotatingFileHandler
-import sys
-
-############ for csv
-import csv
-import pandas as pd
-import numpy as np
-
-app = Flask(__name__)
-
-@app.route('/',methods = ['POST','GET'])
-def login():
-
-   inputData = dict()
-
-   method = request.form['method']
-
-   inputData['hp_me'] = request.form['hp_me']
-   inputData['hp_enemy']  = request.form['hp_enemy']
-   inputData['mp_me'] = request.form['mp_me']
-   inputData['mp_enemy'] = request.form['mp_enemy']
-   inputData['distance'] = request.form['distance']
-   inputData['level_s1'] = request.form['level_s1']
-   inputData['level_s2'] = request.form['level_s2']
-   inputData['level_s3'] = request.form['level_s3']
-   inputData['cd_s1'] = request.form['cd_s1']
-   inputData['cd_s2'] = request.form['cd_s2']
-   inputData['cd_s3'] = request.form['cd_s3']
-
-   if(method == "predict"):
-
-       print(predict);
-   else:
-
-      inputData['output'] = request.form['output']
-
-      df = pd.DataFrame()
-      df = df.append(inputData,ignore_index=True)
-
-      with open('dataTrain.csv', 'a') as f:
-          df.to_csv(f, header=False, sep=',', encoding='utf-8',index=False)
-
-
-   print(inputData)
-
-
-
-   return "1";
-
-if __name__ == '__main__':
-   app.run(host='0.0.0.0', port=80 , debug=True)
+bestparams = None  
+bestreward = 0  
+for _ in xrange(10000):  
+    parameters = np.random.rand(4) * 2 - 1
+    reward = run_episode(env,parameters)
+    if reward > bestreward:
+        bestreward = reward
+        bestparams = parameters
+        # considered solved if the agent lasts 200 timesteps
+        if reward == 200:
+            break
