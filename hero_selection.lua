@@ -6,10 +6,10 @@ BotRadiantList = {"npc_dota_hero_axe",
 				  "npc_dota_hero_axe"};
 
 BotDireList = {"npc_dota_hero_axe",
-				  "npc_dota_hero_bane",
 				  "npc_dota_hero_axe",
-				  "npc_dota_hero_crystal_maiden",
-				  "npc_dota_hero_batrider"};
+				  "npc_dota_hero_axe",
+				  "npc_dota_hero_axe",
+				  "npc_dota_hero_axe"};
 ----------------------------------------------------------------------------------------------------
 
 function Think()

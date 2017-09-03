@@ -1,8 +1,13 @@
 from flask import Flask, redirect, url_for, request, jsonify
-
 import logging
 from logging.handlers import RotatingFileHandler
 import sys
+
+#### CSV
+import csv
+import pandas as pd
+import numpy as np
+
 
 app = Flask(__name__)
 
@@ -11,7 +16,23 @@ def getValue():
 	
    data = request.json
    print(data)
-   return str(data['rewardAll']);
+
+   df = pd.DataFrame()
+
+   # dictTemp  = dict()
+   # dictTemp['hp_weight'] = 1
+   # dictTemp['distance_weight'] = 2
+   # dictTemp['baseDamage_weight'] = 3
+   # dictTemp['attackSpeed_weight'] = 4
+   # dictTemp['creepDamageTaken_weight'] = 4
+   # dictTemp['maxReward'] = 4
+
+   df = df.append(data,ignore_index=True)
+
+   with open('my_csv.csv', 'a') as f:
+       df.to_csv(f, header=False, sep=',', encoding='utf-8',index=False)
+
+   return str(data['maxReward']);
 
 
 if __name__ == '__main__':
