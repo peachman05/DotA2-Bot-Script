@@ -4,6 +4,7 @@ ability_item_usage_lich = require( "bots/ability_item_usage_lich" );
 
 
 npcBot = GetBot();
+math.randomseed( RealTime())
 
 
 GO_TOWER_STATE = 1;
