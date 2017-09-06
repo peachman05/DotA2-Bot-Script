@@ -110,7 +110,10 @@ function Think()
 
 		else
 
+
+			print("//////////////////////////////////////////")
 			for iEnemy,creepEnemy in pairs(creepsEnemy) do
+				
 
 				if( lastTimeList[creepEnemy] == nil)then
 
@@ -129,9 +132,11 @@ function Think()
 						
 
 						timenow = GameTime()
+						print("----------------------------------------")
+						print("******** "..creepEnemy:GetUnitName())
 
 						for iAlly,creepAlly in pairs(creepsAlly) do
-							if( creepAlly:GetAttackTarget() == creepEnemy and creepAlly:GetUnitName() == "npc_dota_creep_goodguys_ranged")then
+							if( creepAlly:GetAttackTarget() == creepEnemy )then
 								sumAttack = sumAttack + creepAlly:GetAttackDamage() ; 
 								-- time = 
 								if( lastTimeList[creepEnemy][creepAlly] == nil )then
@@ -149,8 +154,8 @@ function Think()
 
 						end
 
-						print("----------------------------------------")
-						printTable(lastTimeList);
+						--590.44409179688  589.4443359375 598.60876464844 597.54235839844
+						printTable2(lastTimeList[creepEnemy]);
 
 						creepAllyMin,minValue = findMin(lastTimeList[creepEnemy]);
 						print(minValue)
@@ -160,9 +165,11 @@ function Think()
 								creepDamageActual = creepEnemy:GetActualIncomingDamage(creepAllyMin:GetAttackDamage(),DAMAGE_TYPE_PHYSICAL)
 								if(timenow >= minValue - 1 )then
 
-									if( hpCreepEnemy-creepDamageActual <= heroDamageActual)then									
+									print("hp :"..(hpCreepEnemy-creepDamageActual).." "..(heroDamageActual + 20))
+
+									if( hpCreepEnemy-creepDamageActual <= heroDamageActual )then									
 										npcBot:Action_AttackUnit(creepEnemy,true)
-										print("----------------------attack :"..timenow)
+										print("-------------------------------attack :"..timenow)
 									end
 									print("timein ")
 									lastTimeList[creepEnemy][creepAllyMin] = nil
@@ -378,5 +385,20 @@ function printTable(table)
 		end
 
 	end
+
+end
+
+function printTable2(table)
+
+	
+	-- if( key:IsNull() == false )then		
+		j=0;
+		for key2,value2 in pairs(table) do
+			print("+++++"..j..""..key2:GetUnitName().." "..value2)
+			j = j +1;
+		end
+		
+	-- end
+
 
 end
