@@ -23,6 +23,8 @@ function Think()
 		for i,id in pairs(IDs) do
 			if IsPlayerBot(id) then
 				SelectHero(id,BotRadiantList[i]);
+			else
+				SelectHero(id,"npc_dota_hero_axe");
 			end
 		end
 
@@ -34,10 +36,13 @@ function Think()
 		for i,id in pairs(IDs) do
 			if IsPlayerBot(id) then
 				SelectHero(id,BotDireList[i]);
+			else
+				SelectHero(id,"npc_dota_hero_axe");
 			end
 		end
 
 	end
+
 
 end
 

@@ -26,11 +26,15 @@ checkUpdate = false;
 
 maxParameter = {}
 parameter = {}
-parameter['hp_weight'] = -0.83805749760029-- max basedamage + 180 = 250 
-parameter['distance_weight'] = 0.32221439199044 -- max 900
-parameter['baseDamage_weight'] = -0.32133317719315-- max 60
+
+-- baseDamage_weight,creepDamageTaken_weight,distance_weight,hp_weight,maxReward
+-- 0.57196933267638,0.67016196996143,0.9144944026978,-0.5887051682418,29.0
+
+parameter['hp_weight'] = 0.9 -- max basedamage + 180 = 250 
+parameter['distance_weight'] = 0.5 -- max 900
+parameter['baseDamage_weight'] = 0.9-- max 60
 -- parameter['attackSpeed_weight'] = 0.70539834412996 -- max 1.5 
-parameter['creepDamageTaken_weight'] = 0.47147806006616-- max 100
+parameter['creepDamageTaken_weight'] = 0.8-- max 300
 parameter['maxReward'] = 0
 -- parameter['bias'] = 1000 -- 0 1300
 
@@ -59,7 +63,7 @@ function Think()
 	-- print("test lich")
 	if( STATE == GO_TOWER_STATE and npcBot:IsAlive() )then
 
-		print("go tower ")
+		-- print("go tower ")
 
 		-- npcBot:ActionImmediate_LevelAbility("lich_frost_nova");
 		npcBot:Action_MoveToLocation( towerLocation );
@@ -73,7 +77,7 @@ function Think()
 
 		creeps = npcBot:GetNearbyLaneCreeps(1600,false);
 
-		if( tablelength(creeps) > 1 )then
+		if( tablelength(creeps) > 0 )then
 
 			npcBot:Action_MoveToUnit( creeps[1] );
 			-- print(creeps[1])
@@ -93,6 +97,7 @@ function Think()
 
 		creepsEnemy = npcBot:GetNearbyLaneCreeps(900,true);
 		creepsAlly = npcBot:GetNearbyLaneCreeps(900,false);
+		towersAlly = npcBot:GetNearbyTowers( 900 , false )
 
 		if( npcBot:WasRecentlyDamagedByCreep(1) or tablelength( creepsAlly ) == 0 )then   
 
@@ -109,47 +114,72 @@ function Think()
 				hpCreepEnemy = creepEnemy:GetHealth() 
 				baseDmageHero = npcBot:GetAttackDamage()
 
-				if( hpCreepEnemy  < baseDmageHero + 150 )then				
+				-- if(hpCreepEnemy  < baseDmageHero + 300)then
 
-					countAttack = 0 ;
-					sumAttack = 0;
 
-					for iAlly,creepAlly in pairs(creepsAlly) do
-						if( creepAlly:GetAttackTarget() == creepEnemy )then
-							sumAttack = sumAttack + creepAlly:GetAttackDamage() ; 
-							countAttack = countAttack + 1 ;
+					if( hpCreepEnemy  < baseDmageHero + 250 )then				
+
+						
+						sumAttack = 0;
+
+						for iAlly,creepAlly in pairs(creepsAlly) do
+							if( creepAlly:GetAttackTarget() == creepEnemy )then
+								sumAttack = sumAttack + creepAlly:GetAttackDamage() ; 
+							end
 						end
-					end
 
-					action = nil
-					hpDesire = parameter['hp_weight'] * normalizeValue(hpCreepEnemy,1,250 );
-					distanceDesire = parameter['distance_weight'] * normalizeValue( GetUnitToUnitDistance(creepEnemy,npcBot),0,900 ) ;
-					baseDamageDesire = parameter['baseDamage_weight'] * normalizeValue( baseDmageHero,47,125 );
-					-- attackSpeedDesire = parameter['attackSpeed_weight'] * normalizeValue( npcBot:GetSecondsPerAttack(), );
-					damageTakenDesire = parameter['creepDamageTaken_weight'] * normalizeValue(sumAttack,0,100);
+						for iAlly,towerAlly in pairs(towersAlly) do
+							if( towerAlly:GetAttackTarget() == creepEnemy )then
+								sumAttack = sumAttack + towerAlly:GetAttackDamage() ; 
+							end
+						end
 
-					valueDesire = hpDesire + distanceDesire + baseDamageDesire  + damageTakenDesire;
-					
-					
-					sigmoidValue = sigmoid(valueDesire);
+						print("sumAttack: "..sumAttack)
 
-					-- print("Value :"..valueDesire.."sigmoid :"..sigmoidValue)
+						action = nil
+						hpNormalize =  1 - normalizeValue(hpCreepEnemy,1,250) 
+						basedamageNormalize = normalizeValue( baseDmageHero,47,125 )
+						damageTakenDesire = normalizeValue(sumAttack,0,200)
 
-					if(valueDesire < 0 )then -- stop
+						hpDesire = parameter['hp_weight'] * hpNormalize;
+						-- distanceDesire = parameter['distance_weight'] * normalizeValue( GetUnitToUnitDistance(creepEnemy,npcBot),0,900 ) ;
+						baseDamageDesire = parameter['baseDamage_weight'] * basedamageNormalize;
+						-- attackSpeedDesire = parameter['attackSpeed_weight'] * normalizeValue( npcBot:GetSecondsPerAttack(), );
+						damageTakenDesire = parameter['creepDamageTaken_weight'] * damageTakenDesire;
 
-						npcBot:Action_ClearActions(true);
-						-- print("stop attack")
+						valueDesire = hpDesire + baseDamageDesire  + damageTakenDesire;
 
-					else  -- attack
+						
+						print("hpDesire : "..hpNormalize.." "..hpDesire)
+						print("basedamage :"..basedamageNormalize.." "..baseDamageDesire)
+						print("sumAttack : "..damageTakenDesire.." "..damageTakenDesire)
+						print("-------------------------------------valueDesire :"..valueDesire)
+						
+						
+						-- sigmoidValue = sigmoid(valueDesire);
 
-						npcBot:Action_AttackUnit(creepEnemy,true)
-						-- print("attack!")
+						-- print("Value :"..valueDesire.."sigmoid :"..sigmoidValue)
 
-					end
+						if(valueDesire < 1 )then -- stop
 
-					
+							-- npcBot:Action_ClearActions(true);
+							-- print("stop attack")
 
-				end				
+						else  -- attack
+
+							npcBot:Action_AttackUnit(creepEnemy,true)
+							-- print("attack!")
+
+						end
+					else
+						-- if( GetUnitToUnitDistance(creepEnemy,npcBot) > npcBot:GetAttackRange() )then
+						-- 	print("Move to")
+						-- 	npcBot:Action_MoveToUnit(creepEnemy)
+						-- end
+						
+
+					end		
+				-- end		
 
 			end
 		end
@@ -206,7 +236,7 @@ function Think()
 							end )
 
 			rewardAll = 0;
-			randomParameter();
+			-- randomParameter();
 			-- countRound = 0;
 
 
@@ -224,7 +254,8 @@ function Think()
 	if( timemod > 2)then
 		checkUpdate = false;
 	end
-	   
+
+	
 
 end
 
