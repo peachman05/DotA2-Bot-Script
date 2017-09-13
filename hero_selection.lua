@@ -7,7 +7,7 @@ BotRadiantList = {"npc_dota_hero_axe",
 
 BotDireList = {"npc_dota_hero_axe",
 				  "npc_dota_hero_axe",
-				  "npc_dota_hero_axe",
+				  "npc_dota_hero_sniper",
 				  "npc_dota_hero_axe",
 				  "npc_dota_hero_axe"};
 ----------------------------------------------------------------------------------------------------
