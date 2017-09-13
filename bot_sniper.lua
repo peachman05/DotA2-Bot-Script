@@ -14,6 +14,8 @@ state = GO_TOWER_STATE;
 
 --- 
 
+
+
 reward = 0;
 previous_lasthit = 0;
 previous_deny = 0;
@@ -21,33 +23,56 @@ previous_kill = 0;
 oldHP = 0;
 oldHP_enemy = 0;
 
+-- weight
 lasthit_reward_weight = 1;
 deny_reward_weight = 1;
 kill_reward_weight = 20;
 hp_npc_reward_weight = 0.05;
 hp_enemy_reward_weight = 0.05;
 
+lasthitCheck = {}
+lasthitCheck['previous_lasthit'] = npcBot:GetLastHits();
+lasthitCheck['already_attack'] = false
+
+trainList = {}
+trainList['reward'] = {}
+trainList['action'] = {}
+trainList['observation'] = {}
+
+
+input = {1,2,3,4,5,6} -- distance , canDo , damageToEnemyHero , hpEnemyHero ,canSeeHero,hpNPC
 ---
 
 firstMidTower = GetTower(TEAM_RADIANT,TOWER_MID_1)
 towerLocation = firstMidTower:GetLocation()
 
+
+
 function Think()
+
+	if(npcBot:GetAnimActivity() == ACTIVITY_SPAWN and npcBot:GetAnimCycle() == 0)then
+
+		updateModel();
+		trainList['reward'] = {}
+		trainList['action'] = {}
+		trainList['observation'] = {}
+
+		print("ACTIVITY_SPAWN "..npcBot:GetAnimCycle())
+
+	end
 
 	if(npcBot:IsAlive() == false)then 
 
 		
-		--- last hit		
-		reward = reward + ( GetLastHits() - previous_lasthit ) * lasthit_reward_weight
-		previous_lasthit = GetLastHits()
+		
 
 		--- deny
-		reward = reward + ( GetDenies() - previous_deny  ) * deny_reward_weight
-		previous_deny = GetDenies()
+		-- reward = reward + ( GetDenies() - previous_deny  ) * deny_reward_weight
+		-- previous_deny = GetDenies()
 
-		--- kill
-		reward = reward + ( GetHeroKills( npcBot:GetPlayerID() ) - previous_kill  ) * kill_reward_weight
-		previous_deny = GetDenies()
+		-- --- kill
+		-- reward = reward + ( GetHeroKills( npcBot:GetPlayerID() ) - previous_kill  ) * kill_reward_weight
+		-- previous_deny = GetDenies()
 
 
 
@@ -58,40 +83,155 @@ function Think()
 
 	input = {}
 
-	creepEnemy, input['distance'], input['canDo'] = canLastHit();
-	input['damageToEnemyHero'], input['hpEnemyHero'], input['canSeeHero'] = getEnemyHeroStatus();
-	input['hpNPC'] = getDamageTaken();
+	creepEnemy, input[1], input[2] = canLastHit();
+	input[3], input[4], input[5] = getEnemyHeroStatus();
+	input[6] = getDamageTaken();
 
-	state = getPredict(input);
-	
+	-- state = getPredict(input);
+		
 	if( state == GO_TOWER_STATE and npcBot:IsAlive() )then
 
 		npcBot:Action_MoveToLocation( towerLocation );	
+		state = LAST_HIT_DENY_STATE
+
+		-- print("go to tower")
 
 	elseif( state == LAST_HIT_DENY_STATE )then
 
-		if(creepEnemy ~= nil)then
-			npcBot:Action_AttackUnit( creepEnemy, true );
+		if(lasthitCheck['already_attack'] == false)then 
+
+			if(creepEnemy ~= nil)then
+
+				lasthitCheck['already_attack'] = true
+				lasthitCheck['time_lasthit'] = GameTime();
+				npcBot:Action_AttackUnit( creepEnemy, true );
+			end
+
+		else
+
+			if( lasthitCheck['time_lasthit'] + npcBot:GetAttackPoint() + 0.4 < GameTime() )then
+
+				lasthitCheck['already_attack'] = false;
+				newLasthit = npcBot:GetLastHits();
+				new_reward = 0;
+
+				if( newLasthit > lasthitCheck['previous_lasthit'] )then
+
+					--- last hit		
+					new_reward = ( newLasthit - lasthitCheck['previous_lasthit'] ) * lasthit_reward_weight;					
+					lasthitCheck['previous_lasthit'] = newLasthit
+					print("can last hit "..newLasthit.." "..lasthitCheck['previous_lasthit'].." "..new_reward);
+
+					
+				
+			
+				end
+
+				updateTable(LAST_HIT_DENY_STATE, new_reward, input)
+
+			end
+
 		end
 		
 	end
+	-- print(state)
 
-	--- hp npc
-	newHP = npcBot:GetHealth();
-	if( newHP < oldHP )then
-		reward = reward - (oldHP - newHP) * hp_npc_reward_weight
-	end
-	oldHP = newHP;
+	-- --- hp npc
+	-- newHP = npcBot:GetHealth();
+	-- if( newHP < oldHP )then
+	-- 	reward = reward - (oldHP - newHP) * hp_npc_reward_weight
+	-- end
+	-- oldHP = newHP;
 	
-	--- hp enemy 
-	newHP_enemy = npcEnemy:GetHealth();
-	if( newHP_enemy < oldHP_enemy )then
-		reward = reward + (oldHP_enemy - newHP_enemy) * hp_enemy_reward_weight
-	end
-	oldHP_enemy = newHP_enemy;
+	-- --- hp enemy 
+	-- newHP_enemy = npcEnemy:GetHealth();
+	-- if( newHP_enemy < oldHP_enemy )then
+	-- 	reward = reward + (oldHP_enemy - newHP_enemy) * hp_enemy_reward_weight
+	-- end
+	-- oldHP_enemy = newHP_enemy;
 
 
 end
+
+
+function getPredict(input)
+	return LAST_HIT_DENY_STATE;
+end
+
+-- canDo - 1 = false , 1 = true
+function canLastHit()
+
+
+
+	creepsEnemy = npcBot:GetNearbyLaneCreeps(1600,true);
+	attackDamageHero = npcBot:GetAttackDamage()
+
+
+	for iEnemy,creepEnemy in pairs(creepsEnemy) do
+
+		trueDamage = creepEnemy:GetActualIncomingDamage( attackDamageHero, DAMAGE_TYPE_PHYSICAL )
+		
+		hpCreepEnemy = creepEnemy:GetHealth() 					
+
+		if( hpCreepEnemy  < trueDamage  )then
+
+
+			return creepEnemy,math.floor( GetUnitToUnitDistance(creepEnemy,npcBot) ),1;			
+			
+		end
+
+	end
+
+	return nil,-1,-1;
+
+end
+
+function updateModel()
+
+	-- print("start "..i..": "..GameTime())
+	
+	request = CreateHTTPRequest(":8080" )
+	request:SetHTTPRequestHeaderValue("Accept", "application/json")		
+	request:SetHTTPRequestRawPostBody('application/json', dkjson.encode(trainList))
+	request:Send( 	function( result ) 
+						  --for k,v in pairs( result ) do
+				              if result["StatusCode"] == 200  then  
+									  print("result: "..result['Body'] )
+				              end
+				              -- print("Recieve "..GameTime())
+				          --end
+					end )
+
+
+end
+
+function updateTable(action,reward,observation)
+
+	table.insert( trainList['observation'], observation )
+	table.insert( trainList['reward'], new_reward )
+	table.insert( trainList['action'], action)
+
+end
+
+
+function  getEnemyHeroStatus()
+	local heroEnemys = npcBot:GetNearbyHeroes(1600,true,BOT_MODE_NONE);
+	
+	for _,npcEnemy in pairs( heroEnemys ) do
+		return npcBot:GetEstimatedDamageToTarget( true, npcEnemy, 1, DAMAGE_TYPE_ALL ),npcEnemy:GetHealth(),1;
+	end
+
+	return -1,-1,-1;
+end
+
+function getDamageTaken()
+
+	return npcBot:GetHealth();
+
+end 
+
+
+
 
 function tablelength(T)
   local count = 0
@@ -167,115 +307,5 @@ function printTable2(table)
 		
 	-- end
 
-
-end
-
-function canLastHit()
-
-	creepsEnemy = npcBot:GetNearbyLaneCreeps(900,true);
-	baseDmageHero = npcBot:GetAttackDamage()
-
-	for iEnemy,creepEnemy in pairs(creepsEnemy) do
-		
-		hpCreepEnemy = creepEnemy:GetHealth() 					
-
-		if( hpCreepEnemy  < baseDmageHero  )then
-
-			-- npcBot:Action_AttackUnit( creepEnemy, true );
-			return creepEnemy,GetUnitToUnitDistance(creepEnemy,npcBot);			
-			
-		end
-
-	end
-
-	return nil,-1;
-
-end
-
-function  getEnemyHeroStatus()
-	local heroEnemys = npcBot:GetNearbyHeroes(1600,true,BOT_MODE_NONE);
-	
-	for _,npcEnemy in pairs( heroEnemys )
-		return npcBot:GetEstimatedDamageToTarget( true, npcEnemy, 1, DAMAGE_TYPE_ALL ),npcEnemy:GetHealth(),true;
-	end
-
-	return -1,-1,false;
-end
-
-function getDamageTaken()
-
-	return npcBot:GetHealth();
-
-end 
-
-
-function updateModel()
-
-	-- time = DotaTime()
-	-- -- print("Time :"..time.." Time mod "..time%30)
-
-	-- timemod = time % 30
-	-- if( time >= 0 and  timemod >= 0  and timemod <= 0.1 and checkUpdate == false)then
-
-	-- 	checkUpdate = true;
-
-	-- 	-- print("STATE :"..STATE)
-	-- 	npcBot:ActionImmediate_Chat( "Count :"..countRound.."Time :"..time.."rewardAll :"..rewardAll , false )
-
-
-
-	-- 	current_lasthit = npcBot:GetLastHits();
-	-- 	rewardAll = rewardAll + (current_lasthit - previous_lasthit) ;
-	-- 	previous_lasthit = current_lasthit;
-	-- 	-- print(rewardAll)
-
-
-	-- 	if(countRound == 9)then
-
-	-- 		if( rewardAll > maxRewardMean)then
-
-	-- 			maxParameter = parameter;
-	-- 			maxRewardMean = rewardAll;
-	-- 			npcBot:ActionImmediate_Chat( "best param :"..maxRewardMean , false )
-	-- 			-- print("best param :"..maxRewardMean)
-	-- 			-- print(maxParameter)
-	-- 			for key,value in pairs(maxParameter) do
-	-- 				npcBot:ActionImmediate_Chat( key.." "..value , false )
-
-	-- 			end				
-	-- 		end
-
-	-- 		parameter['maxReward'] = rewardAll
-
-	-- 		request = CreateHTTPRequest(":8080" )
-	-- 		request:SetHTTPRequestHeaderValue("Accept", "application/json")		
-	-- 		request:SetHTTPRequestRawPostBody('application/json', dkjson.encode(parameter))
-	-- 		request:Send( 	function( result ) 
-	-- 							  --for k,v in pairs( result ) do
-	-- 					              if result["StatusCode"] == 200  then  
-	-- 										  print("result:"..result['Body'] )
-	-- 					              end
-	-- 					          --end
-	-- 						end )
-
-	-- 		rewardAll = 0;
-	-- 		-- randomParameter();
-	-- 		-- countRound = 0;
-
-
-	-- 	end
-
-	-- 	countRound = (countRound + 1) % 10;
-
-
-			
-
-		
-		
-	-- end 
-
-	-- if( timemod > 2)then
-	-- 	checkUpdate = false;
-	-- end
 
 end
