@@ -10,6 +10,7 @@ GO_TOWER_STATE = 1;
 FOLLOW_CREEP_STATE = 2;
 LAST_HIT_DENY_STATE = 3;
 ATTACk_ENEMY_STATE = 4;
+RETREAT_STATE = 5;
 
 state = GO_TOWER_STATE;
 
@@ -28,8 +29,8 @@ oldHP_enemy = 0;
 lasthit_reward_weight = 1;
 deny_reward_weight = 1;
 kill_reward_weight = 20;
-hp_npc_reward_weight = 0.05;
-hp_enemy_reward_weight = 0.05;
+hp_npc_reward_weight = 0.02;
+hp_enemy_reward_weight = 0.02;
 
 lasthitCheck = {}
 lasthitCheck['previous_lasthit'] = npcBot:GetLastHits();
@@ -42,6 +43,10 @@ attackEnemyCheck = {}
 attackEnemyCheck['already_attack'] = false
 attackEnemyCheck['time_attack'] = 0
 attackEnemyCheck['oldHP_enemy'] = 0
+
+healthCheck = {}
+healthCheck['oldHP'] = npcBot:GetHealth();
+healthCheck['rewardMinus'] = 0;
 
 
 trainList = {}
@@ -102,48 +107,87 @@ function Think()
 	
 	if( state == IDLE_STATE)then
 		state = getPredict(input);
+		-- print("predict")
 		-- state = LAST_HIT_DENY_STATE
 	elseif( state == GO_TOWER_STATE and npcBot:IsAlive() )then
 
+		locationCheck = 0;
 		if(npcBot:GetTeam() == TEAM_DIRE)then
-			npcBot:Action_MoveToLocation( towerLocationDire );	
+			npcBot:ActionPush_MoveToLocation( towerLocationDire );	
+			locationCheck = towerLocationDire
 		else 
 			npcBot:Action_MoveToLocation( towerLocationRadian );	
+			locationCheck = towerLocationRadian
 		end
-		state = LAST_HIT_DENY_STATE
+
+		-- if( GetUnitToLocationDistance(npcBot,locationCheck ) < 400)then		
+		-- 	state = FOLLOW_CREEP_STATE
+		-- end
+		print("tower :"..(-healthCheck['rewardMinus']) )
+		updateTable(GO_TOWER_STATE, -healthCheck['rewardMinus'] ,input);
+		healthCheck['rewardMinus'] = 0;
+
+		state = FOLLOW_CREEP_STATE
+		-- print("Retreat "..GetUnitToLocationDistance(npcBot,locationCheck ))
+
+	elseif( state == FOLLOW_CREEP_STATE )then
+
+		creeps = npcBot:GetNearbyLaneCreeps(900,false);
+		-- print(tablelength(creeps))
+		if( tablelength(creeps) > 0 )then
+
+			npcBot:Action_MoveToLocation( creeps[1]:GetLocation() )
+
+			if( tablelength(npcBot:GetNearbyLaneCreeps(900,true) ) > 0 )then
+
+				state = IDLE_STATE;
+
+			end
+
+		end
+		
 
 	elseif( state == LAST_HIT_DENY_STATE )then
 
 		lastHitDenyState(creepEnemy)
+		
 	
 	elseif( state == ATTACk_ENEMY_STATE )then
 
 		attackEnemyState(npcEnemy)
+		
 
 	end
-	-- print(state)
 
-	-- --- hp npc
-	-- newHP = npcBot:GetHealth();
-	-- if( newHP < oldHP )then
-	-- 	reward = reward - (oldHP - newHP) * hp_npc_reward_weight
+	-- print(npcBot:GetTeam().." "..state);
+	-- if(npcBot:GetTeam() == TEAM_DIRE)then
+	-- 	print("Dire "..state)
+	-- else
+	-- 	print("Radian "..state)
 	-- end
-	-- oldHP = newHP;
 	
-	-- --- hp enemy 
-	-- newHP_enemy = npcEnemy:GetHealth();
-	-- if( newHP_enemy < oldHP_enemy )then
-	-- 	reward = reward + (oldHP_enemy - newHP_enemy) * hp_enemy_reward_weight
-	-- end
-	-- oldHP_enemy = newHP_enemy;
+	--- hp npc
+	
 
+	checkHelathDecrease();
+
+
+	
 
 end
 
 
 function getPredict(input)
+	value = RandomInt( 1, 10 );
+	-- return GO_TOWER_STATE;
+	if(value <=  1)then
+		return GO_TOWER_STATE; 
+	elseif(value <= 5)then
+		return ATTACk_ENEMY_STATE;
+	else
+		return LAST_HIT_DENY_STATE;
+	end
 
-	return RandomInt( 3, 4 );
 end
 
 -- canDo - 1 = false , 1 = true
@@ -211,10 +255,12 @@ function updateModel()
 end
 
 function updateTable(action,reward,observation)
-
+	-- print("reward :"..new_reward.."Action :"..action)
 	table.insert( trainList['observation'], observation )
-	table.insert( trainList['reward'], new_reward )
+	table.insert( trainList['reward'], new_reward)
 	table.insert( trainList['action'], action)
+
+
 
 end
 
@@ -247,6 +293,8 @@ function lastHitDenyState(creepEnemy)
 					lasthitCheck['time_attack'] = GameTime();
 					lasthitCheck['creep_team'] = creepEnemy:GetTeam();
 					npcBot:Action_AttackUnit( creepEnemy, true );
+				else
+					state = IDLE_STATE;
 				end
 
 		else
@@ -289,8 +337,8 @@ function lastHitDenyState(creepEnemy)
 				end
 
 				updateTable(LAST_HIT_DENY_STATE, new_reward, input)
-
 				state = IDLE_STATE;
+
 
 			end
 
@@ -313,18 +361,24 @@ function attackEnemyState(npcEnemy)
 		else
 
 			if( attackEnemyCheck['time_attack'] + npcBot:GetAttackPoint() + 0.4 < GameTime() )then
-
+				
 				attackEnemyCheck['already_attack'] = false;
 				new_reward = 0;
 
 				newHP_enemy = npcEnemy:GetHealth();
+				-- print("new :"..newHP_enemy.." Old: "..attackEnemyCheck['oldHP_enemy']);
 				if( newHP_enemy <  attackEnemyCheck['oldHP_enemy'] )then
 
-					new_reward = (attackEnemyCheck['oldHP_enemy']  - newHP_enemy) * hp_enemy_reward_weight ;
-					attackEnemyCheck['oldHP_enemy'] = newHP_enemy;
-					print("can hit enemy "..newLasthit);
+					attackDamageHero = npcBot:GetAttackDamage()
+					trueDamage = npcEnemy:GetActualIncomingDamage( attackDamageHero, DAMAGE_TYPE_PHYSICAL )
+
+					new_reward = trueDamage * hp_enemy_reward_weight ;
+					
+					print("can hit enemy "..new_reward);
 
 				end
+
+				attackEnemyCheck['oldHP_enemy'] = newHP_enemy;
 
 				updateTable(ATTACk_ENEMY_STATE, new_reward, input)
 				state = IDLE_STATE;
@@ -333,7 +387,20 @@ function attackEnemyState(npcEnemy)
 			end
 
 		end
+	else
+		state = IDLE_STATE;
 	end
+
+end
+
+function checkHelathDecrease()
+
+	newHP = npcBot:GetHealth();
+
+	if( newHP < healthCheck['oldHP'] )then
+		healthCheck['rewardMinus'] = healthCheck['rewardMinus'] + (healthCheck['oldHP'] - newHP) * hp_npc_reward_weight
+	end
+	healthCheck['oldHP'] = newHP;
 
 end
 
