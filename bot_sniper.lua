@@ -18,6 +18,7 @@ FOLLOW_CREEP_STATE = 11;
 
 
 state = GO_TOWER_STATE;
+waitGetState  = false
 
 	--- http request state
 PREDICT_STATE = 20;
@@ -38,8 +39,8 @@ oldHP_enemy = 0;
 lasthit_reward_weight = 1;
 deny_reward_weight = 1;
 kill_reward_weight = 20;
-hp_npc_reward_weight = 0.02;
-hp_enemy_reward_weight = 0.02;
+hp_npc_reward_weight = 0.01;
+hp_enemy_reward_weight = 0.01;
 
 
 lasthitCheck = {}
@@ -89,96 +90,71 @@ function Think()
 
 		print("ACTIVITY_SPAWN "..npcBot:GetAnimCycle())
 
-	end
-
-	if(npcBot:IsAlive() == false)then 
-
-		
-		
-
-		--- deny
-		-- reward = reward + ( GetDenies() - previous_deny  ) * deny_reward_weight
-		-- previous_deny = GetDenies()
-
-		-- --- kill
-		-- reward = reward + ( GetHeroKills( npcBot:GetPlayerID() ) - previous_kill  ) * kill_reward_weight
-		-- previous_deny = GetDenies()
-
-
-
-		reward = 0;
-
 		state = GO_TOWER_STATE;
-	end
+		waitGetState = false
 
-	creepEnemy, inputPredict[1], inputPredict[2] = canLastHit();
-	npcEnemy, inputPredict[3], inputPredict[4], inputPredict[5] = getEnemyHeroStatus();
-	inputPredict[6] = getDamageTaken();
+	end	
 
-	
-	if( state == IDLE_STATE)then
-		state = getPredict(inputPredict);
-		-- print("predict")
-		-- state = LAST_HIT_DENY_STATE
-	elseif( state == GO_TOWER_STATE and npcBot:IsAlive() )then
+	if(waitGetState == false)then
 
-		locationCheck = 0;
-		if(npcBot:GetTeam() == TEAM_DIRE)then
-			npcBot:ActionPush_MoveToLocation( towerLocationDire );	
-			locationCheck = towerLocationDire
-		else 
-			npcBot:Action_MoveToLocation( towerLocationRadian );	
-			locationCheck = towerLocationRadian
-		end
+		creepEnemy, inputPredict[1], inputPredict[2] = canLastHit();
+		npcEnemy, inputPredict[3], inputPredict[4], inputPredict[5] = getEnemyHeroStatus();
+		inputPredict[6] = getDamageTaken();
 
-		-- if( GetUnitToLocationDistance(npcBot,locationCheck ) < 400)then		
-		-- 	state = FOLLOW_CREEP_STATE
-		-- end
-		-- print("tower :"..(-healthCheck['rewardMinus']) )
-		updateTable(GO_TOWER_STATE, -healthCheck['rewardMinus'] ,inputPredict);
-		healthCheck['rewardMinus'] = 0;
+		
+		if( state == IDLE_STATE)then
+			getPredict(inputPredict);
+			-- print("predict")
+			-- state = LAST_HIT_DENY_STATE
+		elseif( state == GO_TOWER_STATE and npcBot:IsAlive() )then
 
-		state = FOLLOW_CREEP_STATE
-		-- print("Retreat "..GetUnitToLocationDistance(npcBot,locationCheck ))
-
-	elseif( state == FOLLOW_CREEP_STATE )then
-
-		creeps = npcBot:GetNearbyLaneCreeps(900,false);
-		-- print(tablelength(creeps))
-		if( tablelength(creeps) > 0 )then
-
-			npcBot:Action_MoveToLocation( creeps[1]:GetLocation() )
-
-			if( tablelength(npcBot:GetNearbyLaneCreeps(900,true) ) > 0 )then
-
-				state = IDLE_STATE;
-
+			locationCheck = 0;
+			if(npcBot:GetTeam() == TEAM_DIRE)then
+				npcBot:ActionPush_MoveToLocation( towerLocationDire );	
+				locationCheck = towerLocationDire
+			else 
+				npcBot:Action_MoveToLocation( towerLocationRadian );	
+				locationCheck = towerLocationRadian
 			end
 
+		
+			updateTable(GO_TOWER_STATE, -healthCheck['rewardMinus'] ,inputPredict);
+			healthCheck['rewardMinus'] = 0;
+
+			state = FOLLOW_CREEP_STATE
+			
+
+		elseif( state == FOLLOW_CREEP_STATE )then
+
+			creeps = npcBot:GetNearbyLaneCreeps(900,false);
+			-- print(tablelength(creeps))
+			if( tablelength(creeps) > 0 )then
+
+				npcBot:Action_MoveToLocation( creeps[1]:GetLocation() )
+
+				if( tablelength(npcBot:GetNearbyLaneCreeps(900,true) ) > 0 )then
+
+					state = IDLE_STATE;
+
+				end
+
+			end
+			
+
+		elseif( state == LAST_HIT_DENY_STATE )then
+
+			lastHitDenyState(creepEnemy)
+			
+		
+		elseif( state == ATTACk_ENEMY_STATE )then
+
+			attackEnemyState(npcEnemy)
+			
+
 		end
-		
-
-	elseif( state == LAST_HIT_DENY_STATE )then
-
-		lastHitDenyState(creepEnemy)
-		
-	
-	elseif( state == ATTACk_ENEMY_STATE )then
-
-		attackEnemyState(npcEnemy)
-		
 
 	end
 
-	-- print(npcBot:GetTeam().." "..state);
-	-- if(npcBot:GetTeam() == TEAM_DIRE)then
-	-- 	print("Dire "..state)
-	-- else
-	-- 	print("Radian "..state)
-	-- end
-	
-	--- hp npc
-	
 
 	checkHelathDecrease();
 
@@ -189,16 +165,8 @@ end
 
 
 function getPredict(inputTable)
-	-- value = RandomInt( 1, 10 );
-	-- -- return GO_TOWER_STATE;
-	-- if(value <=  1)then
-	-- 	return GO_TOWER_STATE; 
-	-- elseif(value <= 5)then
-	-- 	return ATTACk_ENEMY_STATE;
-	-- else
-	-- 	return LAST_HIT_DENY_STATE;
-	-- end
-	return sendHttpRequest(PREDICT_STATE,inputTable);
+
+	sendHttpRequest(PREDICT_STATE,inputTable);
 
 end
 
@@ -250,7 +218,9 @@ end
 
 function sendHttpRequest(method,inputTable)
 
-	-- print("start "..i..": "..GameTime())
+	
+	waitGetState = true;
+
 	dataSend = {}
 	dataSend['method']= method;
 	dataSend['observation'] =  inputTable;
@@ -258,16 +228,16 @@ function sendHttpRequest(method,inputTable)
 	request:SetHTTPRequestHeaderValue("Accept", "application/json")		
 	request:SetHTTPRequestRawPostBody('application/json', dkjson.encode(dataSend))
 	request:Send( 	function( result ) 
-						  --for k,v in pairs( result ) do
+						 
 				              if result["StatusCode"] == 200  then  
-									  print("result: "..result['Body'] )
+									  -- print("result: "..result['Body'] )
 									  if(method == PREDICT_STATE)then
-									  		clearTempValue();
-									  		state = tonumber(result['Body']);									  		
+									  		-- clearTempValue();
+									  		state = tonumber(result['Body']);
+									  		waitGetState = false;									  		
 									  end
 				              end
-				              -- print("Recieve "..GameTime())
-				          --end
+				              
 					end )
 
 
@@ -275,12 +245,22 @@ end
 
 function updateTable(action,reward,observation)
 	-- print("reward :"..new_reward.."Action :"..action)
+	new_reward = reward - healthCheck['rewardMinus'];
+	healthCheck['rewardMinus'] = 0;
 	table.insert( trainList['observation'], observation )
-	table.insert( trainList['reward'], reward)
+	table.insert( trainList['reward'], new_reward)
 	actionArray = {0,0,0}
 	actionArray[action+1] = 1;
 	table.insert( trainList['action'], actionArray)
-	rewardSumInEpisode = rewardSumInEpisode + reward;
+	rewardSumInEpisode = rewardSumInEpisode + new_reward;
+
+	if( npcBot:GetTeam() ==  TEAM_DIRE)then
+		print("Dire :"..reward)
+
+	else
+		print("Radian :"..reward)
+	end
+
 
 
 
@@ -298,6 +278,7 @@ function clearTempValue()
 	attackEnemyCheck['already_attack'] = false
 	attackEnemyCheck['time_attack'] = 0
 	attackEnemyCheck['oldHP_enemy'] = 0
+	attackEnemyCheck['canKill'] = false
 
 	healthCheck['oldHP'] = npcBot:GetHealth();
 	healthCheck['rewardMinus'] = 0;
@@ -354,7 +335,7 @@ function lastHitDenyState(creepEnemy)
 						--- last hit		
 						new_reward = ( newLasthit - lasthitCheck['previous_lasthit'] ) * lasthit_reward_weight;					
 						lasthitCheck['previous_lasthit'] = newLasthit
-						print("can last hit "..newLasthit);
+						-- print("can last hit "..newLasthit);
 
 						
 					end
@@ -368,7 +349,7 @@ function lastHitDenyState(creepEnemy)
 						--- last hit		
 						new_reward = ( newDeny - lasthitCheck['previous_deny'] ) * lasthit_reward_weight;					
 						lasthitCheck['previous_deny'] = newDeny
-						print("can Deny "..newDeny);
+						-- print("can Deny "..newDeny);
 
 						
 					end
@@ -402,6 +383,9 @@ function attackEnemyState(npcEnemy)
 
 			if( hpHeroEnemy < trueDamage)then
 				attackEnemyCheck['canKill'] = true;
+				attackEnemyCheck['kill_param_input'] = inputPredict;
+				attackEnemyCheck['old_kill'] = GetHeroKills( npcBot:GetPlayerID() )
+				attackEnemyCheck['old_assist'] = GetHeroAssists( npcBot:GetPlayerID()  )
 			end
 
 			
@@ -422,7 +406,7 @@ function attackEnemyState(npcEnemy)
 
 					new_reward = trueDamage * hp_enemy_reward_weight ;
 					
-					print("can hit enemy "..new_reward);
+					-- print("can hit enemy "..new_reward);
 
 				end
 
@@ -438,16 +422,22 @@ function attackEnemyState(npcEnemy)
 
 		end
 	else
-		
+
 		if( attackEnemyCheck['canKill'] == true  )then
 
 			killCurrent = GetHeroKills( npcBot:GetPlayerID() )
-			assitCurrent= GetHeroAssists( npcBot:GetPlayerID()  )
+			assistCurrent= GetHeroAssists( npcBot:GetPlayerID()  )
 
 			if( killCurrent > attackEnemyCheck['old_kill'])then
-				new_reward = 
-
-				updateTable(ATTACk_ENEMY_STATE, new_reward, inputPredict)
+				new_reward = (killCurrent - attackEnemyCheck['old_kill']) * kill_reward_weight
+				updateTable( ATTACk_ENEMY_STATE, new_reward, attackEnemyCheck['kill_param_input'] )
+				attackEnemyCheck['old_kill'] = killCurrent
+				print("can kill")
+			elseif(assistCurrent > attackEnemyCheck['old_assist'] )then
+				new_reward = (assistCurrent - attackEnemyCheck['old_assist']) * kill_reward_weight
+				updateTable( ATTACk_ENEMY_STATE, new_reward, attackEnemyCheck['kill_param_input'] )
+				attackEnemyCheck['old_assist'] = assistCurrent
+				print("can assist")
 			end
 
 		end
